@@ -3,12 +3,17 @@
 use Gedcom;
 use Getopt::Long qw(:config bundling pass_through);
 use Pod::Usage;
+use Term::Prompt;
+
+our ($Ans,$Debug,$Help,$Verbose);
 
 # Process commandline arguments.
 GetOptions (
 	'd|debug+' => sub { $Debug++; $Verbose++; },
 	'h|help' => \$Help,
+	'n|no' => sub { $Ans = 'n'; },
 	'v|verbose+' => \$Verbose,
+	'y|yes' => sub { $Ans = 'y'; }
 ) or pod2usage();
 
 pod2usage() if $Help;
@@ -24,9 +29,22 @@ foreach $Ind ($Gedcom2->individuals()) {
 	@Matches = $Gedcom3->get_individual($Ind->name);
 	if (@Matches) {
 		foreach $Match (@Matches) {
-			print "Found Match: ". $Ind->name . " & ". $Match->name ."\n";
+			unless ($Ans) {
+				print "Merge: ". $Ind->name . " --> ". $Match->name ." ?\n";
+				my $Merge = &prompt('y','>','y/n','n');
+				if ($Merge) { }
+			} else {
+				if ($Ans eq 'y') {
+				}
+			}
 		}
 	} else {
-		print $Ind->name . "\n";
+		print "Adding ". $Ind->name . "\n";
+		$NewInd = $Gedcom3->add_individual;
+		print "Created new individual record ". $NewInd->{xref} .".\n";
+		$NewInd = $Ind;
+		if ($Debug) { print $NewInd->{xref} ." = ". $Ind->{xref} ."\n"; }
 	}
 }
+
+$Gedcom3->write(

@@ -1,0 +1,32 @@
+#!/usr/bin/env perl
+
+use Gedcom;
+use Getopt::Long qw(:config bundling pass_through);
+use Pod::Usage;
+
+# Process commandline arguments.
+GetOptions (
+	'd|debug+' => sub { $Debug++; $Verbose++; },
+	'h|help' => \$Help,
+	'v|verbose+' => \$Verbose,
+) or pod2usage();
+
+pod2usage() if $Help;
+
+my $GedFile1 = $ARGV[0] and -f ($ARGV[0]) or die "You must specify at least 2 GEDCOM files to process.\n";
+my $GedFile2 = $ARGV[1] and -f ($ARGV[1]) or die "You must specify at least 2 GEDCOM files to process.\n";
+
+my $Gedcom1 = Gedcom->new($GedFile1);
+my $Gedcom2 = Gedcom->new($GedFile2);
+my $Gedcom3 = $Gedcom1;
+
+foreach $Ind ($Gedcom2->individuals()) {
+	@Matches = $Gedcom3->get_individual($Ind->name);
+	if (@Matches) {
+		foreach $Match (@Matches) {
+			print "Found Match: ". $Ind->name . " & ". $Match->name ."\n";
+		}
+	} else {
+		print $Ind->name . "\n";
+	}
+}
